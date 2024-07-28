@@ -1,9 +1,11 @@
 <img src="assets/amber.png" alt="amber logo" width="250" align="right" />
 
 # Contributing to Amber
+
 This is a simple but exhaustive guide to get you started on contributing to amber.
 
 ## Contributing guidelines
+
 Before you dig into Amber, you should know a few things before you contribute.
 
 Any code change is submitted [through a PR](https://github.com/Ph0enixKM/Amber/pulls), which is then approved by at least 2 maintainers.
@@ -21,25 +23,30 @@ It is recommended that you see how features were already implemented. A good exa
 To create a PR, you should fork the repo, create a branch, do your work in there, and open a PR. It will then be reviewed and pushed into master.
 
 ### Getting help
+
 Along the way, you may need help with your code. The best way to ask is in [our Discord server](https://discord.com/invite/cjHjxbsDvZ), but you may also ask other contributors personally or post in [Discussions](https://github.com/Ph0enixKM/Amber/discussions).
 
 ## Overview
+
 Amber consists of the following layers:
 
 1. [CLI Interface](#1-cli-interface)
 2. [Compiler](#2-compiler)
    1. [Parser & tokenizer](#21-parser--tokenizer)
    2. [Translator](#22-translator)
-   2. [Built-in](#23-built-in-creation)
+   3. [Built-in](#23-built-in-creation)
 3. [Runtime libraries](#3-runtime-libraries)
    1. [`stdlib`](#31-stdlib)
 4. [Tests](#4-tests)
 
 ### 1. CLI Interface
+
 All CLI interface is in [`main.rs`](src/main.rs). [`clap`](https://crates.io/crates/clap) handles argument parsing.
 
 ### 2. Compiler
+
 Compiler consists of:
+
 - [`compiler.rs`](src/compiler.rs) - Main entry point for the compiler
 - [`rules.rs`](src/rules.rs) - Syntax rules that are used by Heraclitus framework to correctly output tokens
 - [`utils`](src/utils.rs) - Contains parsing environments, caches, contexts and Amber's implementations of metadata
@@ -49,6 +56,7 @@ Compiler consists of:
 `AmberCompiler` struct by itself is just a bootstrapper for all the syntax modules.
 
 #### 2.1. Parser & tokenizer
+
 Thanks to [`heraclitus`](https://github.com/Ph0enixKM/Heraclitus), we can use simple abstractions to go through tokens.
 
 Please open any syntax module code file, and find a line that says: `impl SyntaxModule<ParserMetadata> for MODULE_NAME_HERE`
@@ -73,9 +81,11 @@ fn parse(meta: &mut ParserMetadata) -> SyntaxResult {
     Ok(())
 }
 ```
+
 </details>
 
 #### 2.2. Translator
+
 Same as parser open a syntax module, and find a line that says `impl TranslateModule for MODULE_NAME_HERE` and that should contain a `translate` function.
 
 Same as before, you can either dig into the code you opened or look at the example below.
@@ -93,6 +103,7 @@ fn translate() -> String {
     format!("(( {} + {} ))", self.digit_1, self.digit_2)
 }
 ```
+
 </details>
 
 Basically, the `translate()` method should return a `String` for the compiler to construct a compiled file from all of them. If it translates to nothing, you should output an empty string, like `String::new()`
@@ -100,10 +111,13 @@ Basically, the `translate()` method should return a `String` for the compiler to
 #### 2.3. Built-in creation
 
 In this guide we will see how to create a basic built-in function that in Amber syntax presents like:
+
 ```sh
 example "Hello World"
 ```
+
 And compiles to:
+
 ```sh
 echo "Hello World"
 ```
@@ -114,7 +128,6 @@ For a real example based on this guide you can check the [https://github.com/amb
 <summary>Let's start!</summary>
 
 Create a `src/modules/builtin/builtin.rs` file with the following content:
-
 
 ```rs
 // This is the prelude that imports all necessary stuff of Heraclitus framework for parsing the syntax
@@ -127,9 +140,9 @@ use crate::modules::expression::expr::Expr;
 use crate::translate::module::TranslateModule;
 // Metadata is the object that is carried when iterating over syntax tree.
 // - `ParserMetadata` - it carries the necessary information about the current parsing context such as variables and functions that were declared up to this point, warning messages aggregated up to this point, information whether this syntax is declared in a loop, function, main block, unsafe scope etc.
-// `TranslateMetadata` - it carries the necessary information for translation such as wether we are in a silent scope, in an eval context or what indentation should be used.
+// `TranslateMetadata` - it carries the necessary information for translation such as whether we are in a silent scope, in an eval context or what indentation should be used.
 use crate::utils::{ParserMetadata, TranslateMetadata};
-// Documentation module tells compiler what markdown content should it generate for this syntax module. This is irrelevent to our simple module so we will just return empty string.
+// Documentation module tells compiler what markdown content should it generate for this syntax module. This is irrelevant to our simple module so we will just return empty string.
 use crate::docs::module::DocumentationModule;
 
 // This is a declaration of your built-in. Set the name accordingly.
@@ -220,26 +233,29 @@ impl Statement {
     // ...
 }
 ```
+
 </details>
 
 Don't forget to add a test in the [https://github.com/amber-lang/amber/tree/master/src/tests/validity](`validity`) folder and to add the new builtin to the list of the [reserved keywords](https://github.com/amber-lang/amber/blob/master/src/modules/variable/mod.rs#L16).
 
 ### 3. Runtime libraries
+
 #### 3.1. `stdlib`
 
 `stdlib` is written in Amber. See [`main.ab`](src/std/main) for the code. All `stdlib` functions must be covered by a [test](#4-tests)
 
 ### 4. Tests
+
 Amber uses `cargo test` for tests. `stdlib` and `validity` tests usually work by executing amber code and checking its output.
 
 We have [`validity tests`](src/tests/validity.rs) to check if the compiler outputs a valid bash code, [`stdlib tests`](src/tests/stdlib.rs) and [`CLI tests`](src/tests/cli.rs).
 
-The majority of `stdlib` tests are written in pure Amber in the folder [`tests/stdlib`](src/tests/stdlib). 
+The majority of `stdlib` tests are written in pure Amber in the folder [`tests/stdlib`](src/tests/stdlib).
 For every test there are 3 ways to check the result following this order:
 
-* if a `// Output` comment on top that include the output to match
-* if there is a `*.output.txt` file that contains the expected output
-* "Succeded" will used as default value if the previous cases are not satisfied
+- if a `// Output` comment on top that include the output to match
+- if there is a `*.output.txt` file that contains the expected output
+- "Succeeded" will used as default value if the previous cases are not satisfied
 
 Tests will be executed without recompilation. Amber will load the scripts and verify the output in the designated file to determine if the test passes.
 The `validity` tests are full in Amber in their folder the folder [`tests/validity`](src/tests/validity).
@@ -258,9 +274,11 @@ fn prints_hi() {
     test_amber!(code, "hi!");
 }
 ```
+
 </details>
 
 #### Running tests
+
 To run ALL tests, run `cargo test`.
 
 If you want to run only tests from a specific file, let's say from [`stdlib.rs`](src/tests/stdlib.rs), you add the file name to the command: `cargo test stdlib`
